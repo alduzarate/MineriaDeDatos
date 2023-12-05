@@ -24,11 +24,12 @@ Objetivos:
 - La función a minimizar desciende siempre. (al ser una cuadratica simple, la alternada siempre desciende)
 - Minimización alternada: voy cambiando si fijo los centros y varío la asignación de clases o varío los centros y fijo la asignación de cluster de los puntos. =>
 - Garantía de convergencia: Al minimizar en cada paso, voy a encontrar un mínimo LOCAL de la función en tiempo finito. 
+
 Algoritmo minimización alternada:
 - Empezar con k centros al azar
 - Itero: 
   - Asignar a cada punto al centro más cercano
-  - Asignar cada centro como la media de ses puntos
+  - Asignar cada centro como la media de sus puntos
 Criterio de parada: hasta que dejen de cambiar los puntos
 
 Problemas:
