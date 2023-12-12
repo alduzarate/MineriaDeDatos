@@ -1,10 +1,143 @@
 ## Preprocesamiento
+Preparación de datos
+
+### Entendiendo los datos
+#### Relevancia
+Los datos sirven para resolver el problema? Son relevantes?
+Qué período de tiempo cubren los datos? Quién es el experto en esos datos?
+
+#### Calidad
+-Nro de registros => menos datos, menos confiables los resultados (en gral mientras mas datos mejor, solo habia que recortar por la complejidad de los algoritmos)
+-Nro de variables (en gral, por cada variable 10 o más registros). Si hay demasiadas, se puede usar selección o extracción de variables.
+-Nro de clases (si es muy desbalanceado se puede intentar corregir)
+
+### Limpieza de datos
+
+#### Adquisición
+-Guardarlos en DBs, tener cuidado al parsearlos
+- Verificar la lectura correcta de los datos 
+
+### Meta-datos
+Tipo de variable, Uso de la variable
+
+### Formato
+-Valores faltantes (ignorar registros, ignorar variables, dar valor particular, imputation(malo pq implicaria que la variable es deducible a partir de otras))
+-Formato de fechas
+-Conversión nominales a numéricos (el mecanismo varía segun el tipo de dato) y Discretización (usando diferentes tipos de histogramas) de datos numéricos (solo los arboles de decisión puede usar nominales, el resto usa numéricos)
+-Limpieza de errores y outliers (no hago nada o fuerzo cota inf/sup y los asigno a esos valores)
+
+### Pre-selección de variables. "Falsos predictores"
+-No importa el rango de la variable, sino que tenga muchos valores distintos, qué tanto cambia.
+-Falsos predictores: si construyo un AD y hay una variable al principio del árbol que divide todo -> sospechoso (ver si la borro o consultar si es importante)
+
+### Clases desbalanceadas
+(para evitar que se aprenda luego solo la clase mayoritaria)
+-Sobresamplear la minoritaria
+-Subsamplear la mayoritaria (descartando casos obvios)
 
 ## Visualización
 
+### Buenos gráficos - El lie factor
+-Si el box plot no alcanza, hacer mas pequeños haciendo "zoom"
+-Lie factor: escalas en el eje Y no acordes a la magnitud de los datos, dan un efecto de cambio notorio que en realidad no existe.
+
+### Representación de datos en 1,2,3D
+1D:
+-Problema de los histogramas: aglomeramiento (causado por outliers por ejemplo). Solución: bins de igual altura o eliminando el outlier de alguna manera.
+-Boxplot: se puede modificar la distancia desde la cual se empieza a considerar un pto outlier
+
+2D:
+-Problema de scatter plot: saturación. Si hay 10 millones de puntos no se entiende nada.
+-Contornos: gráficos para plots con alta densidad
+
+Primero se hace un análisis univariado para ver cosas raras simples, y luego se pasa al bivariado etc (o mientras más variables mejor) para ver si hay cosas raras en los datos.
+
+3D:
+-Proyecciones de la supercie en el plano (problema: siempre depende de donde se ponga la proyeccion, de acuerdo a eso se puede ocultar información)
+-Heat-map: 2D +  1 color que da información de la 3er dimensión
+
+### Representación de datos en 4D+
+-Parallel coordinates: el orden de los ejes de las variables es importante, límite de ~20 dimensiones
+-Chernoff-Faces: caritas
+-Star plots: cada variable va en una dirección angular equiespaciada diferente.
+-Scatterplots
+-Stick figures
+
+Primero se hace un análisis univariado para ver cosas raras simples: el problema es que no muestra correlaciones.
+Luego se pasa al bivariado etc (o mientras más variables mejor) para ver si hay cosas raras en los datos. En 2D se ven facilmente las correlaciones, pero no se ven efectos multivariados. 
+
 ## Proyecciones
+Se representan los datos en un espacio de menor dimensión para:
+- Visualizar mejor los datos
+- Para moderlarlos mejor
+Lo que caracteriza datos en muchas dimensiones es la distancia entre los puntos => una buena proyección es la que conserva estas relaciones de similaridades o distancias, es decir, una proyección lineal tal que los datos conserven lo más posible su estructura.
+
+La proyección se calcula de manera de minimizar las distancias de los puntos (*r*estos) al espacio proyectado. Esto se puede ir calculando iterativamente, es decir:
+- La primer componente principal es la **dirección** en la cual los datos tienen máxima varianza (ya que minimizar los restos es equivalente a maximizar las proyecciones, y como la media es 0, hay que maximizar la varianza).
+- La segunda comp. ppal es la dirección ortogonal a la anterior en la cual hay máxima varianza (es la 1er comp. del subespacio que queda)
+- y así hasta llegar a las p variables.
+
+La solución de cuál es la dirección (vector unitario) que maximiza las proyecciones son los autovectores de la matriz de covarianza => como el vector es unitario, la varianza de z es el autovalor.
+
+¿Cómo se calculan las direcciones principales? Se calculan los *p* autovectores de la matriz de covarianza con sus correspondientes autovalores, se las ordena según el valor de su autovalor, con lo cual es autovalor máximo da la dirección de varianza máxima (que da los datos lo más separados posible)
+
+Desventaja: dimensiones altas hace que el cálculo se vuelva complejo (p³).
+
+¿Cuántas dimensiones necesito conservar? La cantidad puede estar determinada por la suma relativa de los lambdas, ya que quizás con sumar solo 2 ya tengo algo muy parecido a los z (ya que los otros pueden ser muy pequeños y no aportar significativamente) => Varianza explicada: dejar las direcciones que conservan "casi toda" la varianza.
+
+Formas de hacer la PCA:
+- En correlación
+  - Datos sin normalizare - distintas varianzas para cada variable original
+  - Se usa cuando las relaciones entre las variables tienen sentido físico-real (y por ello no se las puede escalar)
+  - Puede suceder que el 1er autovector tenga que ver con la escala de los datos => hay que conservar más autovalores para describir los datos pq el primero explica casi todo del tamaño y después las direcciones interesantes aportan mucho menos al tamaño de los datos.
+- En covarianza:
+  - Datos normalizados previamente (varianza 1 en todas las variables)
+  - Cuando las variables no tienen relación
+  - No suele haber un autovector muy grande
+  - Se usa en la mayoría de los casos reales, suelen quedarse con los autovectores normalizados que suman el 95% de la varianza.
+
+Cosas que se pueden hacer usando la PCA:
+- Detección de outliers
+- Interpretación: ver qué variables explican más los datos
+
+Dato de color: MDS se basa solo en distancias entre puntos. No se necesita que los puntos esté en un espacio vectorial, solo las distancias. (PCA es un caso particular de MDS)
+
+### Proyecciones no lineales
+Se usan superficies no-lineales (curvas en vez de rectas por ej)
+
+Paper **Isomap**: Pca no va más allá, busca la mejor manera de retirar la superficie. Isomap va más allá y aunque sea retorcida puede encontrar menos dimensiones
+
+--------
+
+Paper **Kernel PCA for novelty detection**: Una vez que estiró los datos en el espacio que transforme con la pca, midiendo distancias con el kernel busco lo que está lejos y eso es lo novedoso
+Ojo con la elección del sigma, cambia todo.
 
 ## Selección de variables
+
+
+### Por qué y para qué
+
+
+
+### Métodos
+
+
+
+### Filtros
+
+
+
+### Wrappers
+
+
+
+### RFE
+
+
+
+### Estabilidad. Selección en listas múltiples
+
+
 
 ## Clustering
 Objetivos:
@@ -188,3 +321,9 @@ Contraejemplos
 - Uno asume que las soluciones naturales tienen que ser estables
 - Lo contrario no está garantizado. Hay soluciones estables que son "artificiales". Es decir, las soluciones artificiales no tiene por qué ser inestables.(ejemplo: clusters triangulados). Se suele superar seleccionando (entre todas las estables) la que tiene mayor k. Pero para el caso de Iris, las soluciones siempre son estables y ahi se pierde casi siempre. =>
 - Principal desventaja: los algoritmos que buscan "bolas" son estables en distribuciones alargadas para k crecientes (K-means en una distribución uniforme unidimensional) y no son las que uno está buscando.
+
+## Ensambles
+
+
+## Métodos de Kernel
+
