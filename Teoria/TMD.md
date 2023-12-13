@@ -433,11 +433,76 @@ Formas de resolver el dilema de la complejidad de las funciones (ambos extremos 
 
 ### Bagging
 
+- Usar predictores buenos pero inestables (AD y ANN sobretodo)
+- Conseguir diversidad perturbando los datos
+- Usa bootstraps: muestras al azar de la misma longitud, con repetición (bolillero donde al sacare la bolilla se vuelve a poner en la esfera).
+- El bootstrap no introduce bias en ninguna estadística! (al tener repetición es como si estuviera sampleando la muestra original)
+- Cómo se construyen los miembros: Cada predictor se entrena sobre un bootstrap del conjunto de entrenamiento
+- Cómo se combinan las decisiones:
+  - Para regresión/ranking: promedio simple de las predicciones de cada modelo
+  - Para clasificación:
+    - Cada modelo vota por una clase. La que tiene más votos es elegida.
+    - Cada modelo estima la probabilidad de clase. Se promedian. La de mayor probabilidad se elige. (Ayuda a resolver el problema del sistema de votos cuando las confidencias son muy bajas)
+  - Para clustering: se crea una matriz que cuenta cuantas veces cada par de puntos termina en el mismo cluster, y se clusteriza esa matriz de similitud.
 
+¿Cuántos predictores/miembros entrenar? ==> no es necesario fijar T, sino solo que sea grande (se están promediando cosas que no tienen bias, es más ruido al azar, después de 500 veces el ruido lo cancelé seguro al promediar cosas con pequeño ruido y lo que queda no cambia más)
 
-### > Random Forest
+La clave para que funcione Bagging es la inestabilidad de los clasificadores; que se cambien un poco los datos y den algo que en muchos puntos difiere (en otros no) pero donde hay errores tiende a cancelarse porque difiere.
 
+Otras formas de generar diversidad (en vez de hacer bootstraps) o de hacer los miembros:
+- Sub-sampling de los datos (dividir en train y val)
+- Agregar ruido
+- Variar los modelos en vez de los datos (la forma en que ajustan o la condicion inicial en ANN; las ANN al empezar en un punto al azar y descender por el gradiente al ser azar no tienen bias y por esto ya tienen la diversidad que buscamos, se pueden entrenar 100 redes sobre los datos originales, promediar y listo en vez de usar bootstraps, cuesta menos)
+
+Otras formas de combinar las decisiones de los miembros:
+- Usar pesos estadísticos (cuando se usan las probabilidades) en la combinación: votos *livianamente* "pesados". Los mejores clasificadores tienen más fuerza en la decisión
+  - Funciona igual o mejor que el uniforme
+
+### > Random Forest: evolución de Bagging al usar árboles como modelos
+Aca se pueden usar datos más "reales", no como en el caso anterior que eran solo vectoriales.
+- Problema bagging + árboles: Usar bootstraps genera diversidad, pero los árboles siguen estando muy correlacionados (las mismas variables tienden a ocupar los primeros cortes siempre)
+
+Solución:
+- Agregar un poco de azar al crecimiento
+- En cada nodo, seleccinar un grupo chico de variables al azar y evaluar solo esas variables bajo el criterio, elegir al mejor y dividir los puntos hasta llegar a 1.
+  - No agrega sesgo: a la larga todas las variables entran en juego.
+  - Agrega varianza: pero eso se soluciona fácil promediando los modelos
+  - Es efectivo para decorrelacionar los árboles.
+
+Observaciones:
+- Construye los árboles hasta separar todo. No hay podado. No hay criterio de parada.
+- La cantidad random de variables a evaluar es importante (muy pequeño muy azaroso y muy grande es igual a bagging). El default sqrt(total_vars) suele ser bueno.
+- Al igual que antes, el nro de árboles no es importante, mientras sean muchos (>500)
+
+Subproductos de RF:
+#### Out-of-bag estimation
+
+- Cuando se toma un bootstrap hay ptos que quedan fuera (llamados Out Of Bag, OOB), un 37% del total en media
+- Para cada predictor hay un conjunto OOB que no usó durante el training => Se pueden usar para estimar errores de predicción sin sesgo (con un ensemble más chico, pero sigue siendo en test)
+- P/c pto del train set formo un subensamble que tiene solo los clasificadores que no entrenaron con ese punto
+- Se hacen predicciones sobre todo el conj de train y promedio => Predicciones OOB, Errores OOB
+- Son una buena estima del errot de test (pero tienen un sesgo, "seguro", ya que estiman de más al estar calculadas con un ensamble más chico). Pero al ser de más y no de menos ta todo ok.
+- Es gratis, los puntos ya estaban ahí (datamining math :sparkles:)
+
+#### Devuelve Medida de importancia de la variables
+Dos criterios, los dos se estiman fácil y suelen ser equivalentes:
+- Gini: Media de la reducción del Gini cuando se usó cada variable, promediada en el RF (subproducto del ajuste de los árboles)
+- Randomization: aumento del error OOB cuando cada variable se randomiza por separado (si al randomizarla el error no cambia, no servía pa nada) (se hace al hacer una pasada por los conj OOB con cada una de las variables randomizadas)
+
+#### Gráfica de proximidad
+- Modo interno de proyectar datos en bajas dimensiones (como PCA o MDS)
+- Calcula una matriz de distancias entre los datos basada en cuantas veces los ptos terminan en una mismo nodo de un árbol (ptos cercanos deberían terminar juntos seguido)
+- Hace un MDS de esas distancias (no puedo hacer PCA porque no estoy en espacio euclideano?)
+
+Muy usado porque:
+- no hay que ajustar ningún parámetro
+- no hay que dividir los datos en train/validation ni en train/test, al tener la estima OOB que está apenas sesgada para el lado malo
+- Suele ser peor que boosting pero la diferencia es muy chica para ir por ese método que es mucho más complejo, este es plug and play básicamente y anda muy bien si no hay mucha exigencia
+  
 ### > Boosting
+
+
+
 
 ## Métodos de Kernel
 
