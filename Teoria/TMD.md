@@ -114,30 +114,97 @@ Ojo con la elección del sigma, cambia todo.
 
 ## Selección de variables
 
-
 ### Por qué y para qué
 
+Caso: tener mil variables haría que la medición sea costosa; haciendo que la PCA no sea una opción viable. Mejor sería limitar esas mil a 20 y después voy y mido eso nomás, y en última se hace PCA sobre ese subconjunto de variables. Además de que modelar el problema origial directamente sería subóptimo (tanto en calidad como en interpretabilidad)
 
-
+Ventajas: 
+- Se mejora la performance de los métodos de aprendizaje (y reducir el problema de la dimensionalidad)
+- En muchos casos muchas variables no son informativas del problema (ruido o redundancias) y al eliminarlas reducimos el riesgo de sobreajuste.
+- **Se descubren** cuáles son las variables más importantes en un problema y cuáles están correlacionadas, coreguladas o son dependientes y cuáles no.
+  
 ### Métodos
 
+- Univariados: consideran una variable a la vez (pero no pueden resolver algunos problemas, como el del xor)
+- Multivariados: consideran subconjuntos de variables al mismo tiempo.
+
+¿Por qué no se prueban todas las opciones que hay de combinaciones de subconjuntos de variables? => explosión combinatoria: costoso computacionalmente y además suele llevar a una mala solución (al probar entre tantos pares, la probabilidad de que aparezca alguna correlación al azar es muy alta) ==> se usan soluciones sub-optimas sobre eurísticas.
+
+### Filtros (heurística)
+- Ordenan las variables con criterios de importancia independientes del predictor (no resuelven el problema de modelado directamente) y se retienen las más importantes (criterio de corte)
+- Suelen ser univariados
+- Los criterios de importancia son los que más separan las clases en diferencia de medias en relación a las varianzas.
+  - Ejemplos: anova (aunque es mejor usar un test estádistico más gral como kruskal wallis que no asuma que las variables son gaussianas para evitar falsos resultados de separación, aunque lea menos), ganancia de información, etc
+- Suelen tener problemas con variables "conjuntas"
+- Son muy rápidos
+
+### Wrappers (heurística)
+- Usan el predictor final (modelo) para evaluar la utilidad de las variables (probando de a subconjuntos el error al usar ese subconjunto de variables, el tema que esto es muy costoso como vimos antes)
+- Suelen ser multivariados
+- Dar mejores selecciones
+- Son muy pesados
+- Suelen hacer overfitting
+
+Alternativas a la búsqueda con explosión combinatoria:
+
+#### Búsquedas Greedy
+##### < Forward selection
+![[forward-selection.png]]
+
+-Evalúo en cada paso el que tiene mejor error y en el paso siguiente considero solo el subconjunto de variables que tiene las del mejor subconjunto actual.
+-Llega hasta el final y después vuelve al mejor, ya que el error puede ir fluctuando al agregar/sacar variables.
 
 
-### Filtros
+##### > Backward elimination
 
+![[backward-search.png]]
+-Comienzo con todas las variables, y pruebo de sacar una y me quedo con el que mejor performó. Luego, pruebo los subconjuntos de variables que **están cotenidas** en el mejor subconjunto actual. Así hasta llegar al nivel univariado.
+-Evalúa más pares de variables que funcionan juntos, sin jugarsela por una variable como hace forward al principio.
+-Es menos óptima cuando se quiere encontrar conjunto chiquito y óptimo.
 
+También se puede hacer un híbrido entre ambas, Búsquedas pseudo random (probando al azar) y simulated annealing, genetic algorithm.
 
-### Wrappers
-
+Una buena alternativa para cuando se tienen cientos de miles de variables, sería algo como BS pero eficiente. Si la función de error es suave, dar el paso en la dirección de maximo descenso en la derivada (facil de calcular, aunque sea una aprox, llamadas "medidas internas de importancia") del modelo (respecto de cada una de las variables) debería ser lo mismo que el máximo descenso del error. ==> paso a construir solo un modelo por paso y el algoritmo pasa de cuadrático a lineal.
 
 
 ### RFE
+- Ajusta un modelo a los datos
+- Iteracion:
+  - Rankea las variables usando una medida interna de importancia (+imp, +empeora el modelo al ser eliminada)
+  - Eliminar la variable con el ranking mas bajo (la que menos me modifica el modelo)
+
+¿Cómo consigo las medidas internas de importancia que aproximan el error? Se estima, no se mide directamente
+- RFE con SVM: el vector que define el plano generado por la SVM, la componente que más colabore en la suma vectorial será la más importante. 
+- Random forest
+  - Shuffling OOB
+  - Variación del GINI index
+- LDA o PDA o regr logística: weights
+- PLS: scores
+
+Problemas con el RFE:
+-Variables importantes pero correlacionadas (comparten la importancia) ==> el ranking de variables tiende a ser inestable
 
 
 
-### Estabilidad. Selección en listas múltiples
+### Evaluando las selecciones
+Idea base:
+- Aplicar el wrapper, filtro o RFE al prob
+- Al ir eliminando variables, controlo el error (en ppio se usó cross-validation, que estuvo mal hecho). Minimizo.
+- ¿Por qué estuvo mal hecho usar cross-validation? Pq se está estimando el error de test sobre los mismos datos que usó para elegir las varibles ==> fuente de bias.
+  - Elegir variables es como modelar, es como elegir un clasificador; estoy haciendo algo que está basado en los datos (aunque no sea construir el clasificador en sí, es algo que guía la búsqueda e impacta en el clasificador). Se necesitan usar datos completamente independientes del proceso de elección de las variables para poder estimar bien el error.
+
+Cómo se evalúa la selección: partiendo los datos en 3 partes:
+- Training: para entrenar los clasificadores. Para cada subconjunto de variables entrenar un modelo en el training set y elegir las variables.
+- Validación: evaluar dónde está el mínimo de la variable. Elegir el subconjunto de variables que muestra la mejor performance en el validation set. (Acá si se puede usar cross-validation para tener una mejor estima)
+(como tercer paso' se hace una selección final con train+validación)
+- Test: para estimar el error final verdadero que después se muestra (pero las variables se eligieron ya con el de validacion, para que sea confiable)
 
 
+Generalization_error <= Validation_error + $ϵ(c/n_2)$
+
+![[error_en_busqueda_variables.png]]
+
+El error de estimación mientras más evaluo (búsqueda exhaustiva), más baja. Si pruebo muchas cosas, termina encontrando algo bueno (sobreajuste, por más que se dejen conjuntos de test). => Acotar la complejidad de la búsqueda(C, curva roja) mejora el resultado (curva verde)! (búsqueda suboptima usando una heurística) 
 
 ## Clustering
 Objetivos:
@@ -322,8 +389,26 @@ Contraejemplos
 - Lo contrario no está garantizado. Hay soluciones estables que son "artificiales". Es decir, las soluciones artificiales no tiene por qué ser inestables.(ejemplo: clusters triangulados). Se suele superar seleccionando (entre todas las estables) la que tiene mayor k. Pero para el caso de Iris, las soluciones siempre son estables y ahi se pierde casi siempre. =>
 - Principal desventaja: los algoritmos que buscan "bolas" son estables en distribuciones alargadas para k crecientes (K-means en una distribución uniforme unidimensional) y no son las que uno está buscando.
 
+**Density Peaks**: Mide densidades, Cosas densas PERO que están lejos de los puntos densos
 ## Ensambles
 
 
+
+
+### Bagging
+
+### Random Forest
+
+### Boosting
+
 ## Métodos de Kernel
 
+**kernels_for_proteins**: Construir kernels para algo es muy difícil xd
+
+**undersampling**:
+Genero puntos pero antes me aseguro que la zona sea segura (eliminando los que no tenga vecinos de su clase)
+Si la clase es desbalanceada es mejor no hacer nada artificialmente
+Hay que ser escépticos al leer papers de ML, 1/100 está mal
+
+**String kernels**: Lo que funciona parte de ideas simples (redes profundas)
+Método de clasificación que proyecta al azar en un espacio muy grande y ahí puedo encontrar una solución muy fácil, pero funciona en unos casos y otro no. (Todo lo que tenga azar involucrado en gral no sirve)
