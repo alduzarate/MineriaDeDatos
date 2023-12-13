@@ -390,16 +390,54 @@ Contraejemplos
 - Principal desventaja: los algoritmos que buscan "bolas" son estables en distribuciones alargadas para k crecientes (K-means en una distribución uniforme unidimensional) y no son las que uno está buscando.
 
 **Density Peaks**: Mide densidades, Cosas densas PERO que están lejos de los puntos densos
+
 ## Ensambles
 
+Conjunto grande de modelos que se usan juntos como un "meta modelo"
 
+- Idea base: usar conocimiento de distintas fuentes al tomar decisiones.
 
+Componentes de un ensamble:
+- Un método para seleccionar o construir los miembros (si buscar de la misma o distinta área)
+- Un método para combinar las decisiones (votación, promedio, función de disparo)
+
+**< Ensambles divisivos**: 
+- expertos en *diferentes áreas* con alto conocimiento cada uno de *su* tema. Estructura jerárquica (a diferencia de la anterior), hay una cabeza que decide quien sabe del tema. (Mixture of experts, Stacking).
+- Divide el problema en una serie de subproblemas con mínima sobreposición (a lo d&q)
+- Útiles para atacar problemas grandes
+- Se necesita una función (de disparo) que decida qué clasificador tiene que actuar (**¡si esta se equivoca y asigna mal al clasificador que tiene que actuar ya no hay vuelta atrás, el modelo va a actuar mal!).**
+
+### Stacking
+Se dividen los datos y se crean T clasificadores, uno experto en bootstrap, para luego hacer un metaclasificador que recibe como entrada la salida de las clases de los clasificadores anteriores y decide y aprende a quién darle importancia en base a las posturas que van tomando.
+
+### Mixture of experts
+Se divide al espacio y se hacen T clasificadores, cada uno experto en un lugar del espacio. La decisión final es una combinación lineal de los clasificadores, donde la función de disparo le da diferente peso a cada clasificador segun el lugar del espacio que se quiera ver.
+
+**> Ensambles planos**: 
+- muchos elementos, todos son pares con alto conocimiento sobre el mismo problema, *todos* votan. (Fusión, Bagging, Boosting, RF)
+- Deben ser lo mejor posible individualmente pero deben opinar distinto en algunos casos. Sino mejor quedarse con uno solo. Que se equivoquen lo menos posible pero que a su vez sean lo más diverso posible.
+- Hay del lado de una formalización más computacional-matemática (boosting) y otros más por la vía estadística (bagging, RF).
+
+El dilema del sesgo-varianza explica por qué funcionan los ensambles.
+Error de sesgo: 
+- por falta de flexibilidad en mi función de aproximación (Todas las soluciones son estables), estoy apuntando hacia un lugar que no es el correcto (aunque haya áreas que no están tan mal).
+- se da cuando se usan funciones rígidas, con buena estimación de los parámetros óptimos pero poca flexibilidad.
+
+Error de varianza: 
+- se le da mayor flexibilidad a las funciones con lo cual está la capacidad de aproximar mucho mejor que antes, pero a su vez un pequeño cambio en los datos que estoy ajustando, produce cambios inmensos en la función. (Sería el error en obtener los parámetros adecuados de la función)
+- se da cuando se usan funciones flexibles (como polinomios), tiene buen ajuste pero mala estimación de los parámetros óptimos.
+
+Formas de resolver el dilema de la complejidad de las funciones (ambos extremos dan errores altos, por el lado de baja complejidad de sesgo y por el lado de alta complejidad de varianza)
+- Disminuir la varianza de los predictores sin sesgo: construir muchos predictores y promediarlos (Bagging y RF)
+- Reducir el sesgo de los predictores estables: construir una secuencia tal que la combinación tenga menos sesgo (Boosting)
 
 ### Bagging
 
-### Random Forest
 
-### Boosting
+
+### > Random Forest
+
+### > Boosting
 
 ## Métodos de Kernel
 
