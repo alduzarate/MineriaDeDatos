@@ -556,6 +556,88 @@ Ventajas boosting:
 - efectivo, tiene garantías de funcionamiento (siempre que el weaklearn cumpla, en la realidad si no consiguen mejorar el 0.5, hacen trampa y vuelven a arrancar el algoritmo)
 
 ## Métodos de Kernel
+Se usa para problemas simples muy actuales que no es ni imagenes ni cosas secuenciales (acá ya hay que usar redes profundas).
+
+Los puntos más cercanos al hiperplano se llaman vectores soporte.
+Margen del hiperplano: distancia entre vectores soporte.
+- Maximizar el margen es bueno para achicar el error de test acorde a la intuición y la teoría del aprendizaje => el error de test es más chico mientras más simple sea el clasificador y mientras más grande sea el margen ($E_t < E_a + f(VC/m$)
+- Implica que solo los vectores soporte importan, otros puntos de entrenamiento son ignorables => en gral es muy rápido de calcular, cuando hay una buena solución con buen margen y pocos puntos mal clasificados.
+
+¿Cómo obtener el hiperplano (lo más simple es lo lineal) que hace máximo el margen automáticamente?
+
+- Quiero maximizar la distancia entre los vect. soporte de una clase y el plano + lo mismo pero para los soporte de la otra clase => esto es equivalente a minimizar la norma bajo la condición que deja todos los puntos de una clase de un lado, y los de la otra del otro.
+
+### SVM no separable
+
+- El tema es que este problema de minimizacion no tiene solución si las dos clases no son separables => se crea una variable de relajación: mide cuánto para el otro lado está desviado este punto (de donde debería estar para que cumpla la condición o que esté dentro de margen) 
+- Se permite que algunos puntos estén mal clasificados, pero que sean lo menor posible => minimizo también la suma de la variable de relajación junto al margen
+
+### Kernels
+
+Para casos donde no se pueda separar linealmente, se proyectan los datos a un espacio de mayor dimensión (donde debería ser más fácil separar las 2 clases)
+
+![[truco_kernel.png]]
+
+- Habría que calcular los productos escalares $ϕ(x_s)$ y $ϕ(x_t)$, pero esto en un espacio de alta dimensión puede ser caro.
+- Mejor usar un **kernel**: una función (x,z) -> k(x,z) que representa el producto escalar en un espacio vectorial "oculto":
+
+Feature Spaces: Una  forma  de  utilizar  SVM  para  clasificar  problemas  no-linealmente  separables  es  mapear  los  puntos a  un  espacio  de  mayor  dimensión  en  la  cual  sí  sean  separables.   El  truco  del  Kernel  consiste  en  encontrar  un φ tal  que $K(x_i,x_j) =φ(x_i)^Tφ(x_j)$ , y Mercer nos dice que toda funcion semidefinida positiva es un kernel.
+
+Ejemplos de kernels:
+- Polinomial: $k(x,z) = (uxz + v)^p$
+  - los vectores son x y z
+  - u hace cambiar la forma del kernel, se puede optimizar (si hay tiempo y prata) pero en gral es 1
+  - v suele ser 0
+  - p se optimiza siempre:
+    - se optimiza con un conjunto de validación: separa parte de él y con esa parte se busca la optimización
+    - se suele probar con los grados [1..5]
+- Gaussiano
+- ¡not a kernel: tanh()!
+
+Obs:
+- Todo kernel positivo y simétrico f(u,v) es un producto interno en algun espacio, sin importar cuál es el espacio.
+- Kernel algebra vale => combinaciones lineales de kernels son kernels
+- Se pueden hacer kernels para objetos no vectoriales (como en el paper String Kernels)
+
+¿Cómo se usan las SVMs entonces?
+- Elegir un kernel k() y optimizar sus parámetros
+- Optimizar C, el trade-off entre margen y errores. Se prueba con valores entre 10⁻5 y 10⁵.
+- Se resuelve con el kernel el problema de minimización
+- Calculo la clase calculando el producto usando el kernel
+
+Entonces:
+- SVMs maximizan el margen (en el espacio vectorial ampliado)
+- Usar el truco del margen relajado
+- Proyectar los datos en un espacio de dimensión más alta para casos no lineales
+- Los kernels simplifican los cálculos
+- El método Lagrangiano lleva a un problema de minimización cuadrática "linda" bajo condiciones.
+-------
+
+Comente el truco del kernel en SVM. Mencione y explique algún kernel en particular y cómo optimizaría parámetros del mismo.
+El método de support vector machine nos plantea que dadas múltiples soluciones que separan linealmente (o con un hiperplano) dos conjuntos de datos,  podemos encontrar una óptima que maximice los márgenes entre dicho plano y los datos (en este caso, maximizar los vectores de soporte).  Ahora bien, existen casos donde no se puede encontrar un plano que separe ambos conjuntos, en estos casos, si soft-svm no funciona, existe una solución que nos plantea mapear los datos a un espacio de mayor dimension, en el cual sí puedan ser separados.
+
+
+### Otros problemas
+
+- Cualquier método de ML que solo dependa de productos internos de los datos puede usar kernels 
+
+#### Clasificación multiclase
+- Divide al problema en subproblemas de 2 clases: OVA (n problemas de One Versus All other classes) u OVO (ensamble de C(n,2) problemas One Versus One, la que tiene más votos va). OVO es más eficiente
+- Hay formulaciones directas multiclase de SVM pero no son mejor que OVO.
+
+#### Regresión
+- Muy similar a clasificación, propuso "el tubo": los puntos tienen que estar dentro de un tubo de ancho $ϵ$. Los ptos están bien clasificados si estan dentro del tubo, y mal clasificados si están afuera.
+- Seteo entonces, el kernel y sus parametros, C y ahora se agrega "el tubo".
+
+#### Novelty detection
+- No hay clases, sino comportamientos normales y raros del sistema
+- Clásico: usa una función de densidad, puntos debajo del threshold son outliers
+- 2 versiones de kernel:
+  - Tax & Duin: encontrar la minima hiper esfera que contiene todos los datos, puntos afuera son outliers. Minimizo el radio de la esfera, permitiendo que algunos puntos queden afuera (relajando, como se hizo antes)
+  - Scholkopf: encontrar el hiperplano con la maxima distancia al origen que deja todos los puntos de un lado (solo para kernel Gaussiano)
+-------------------------------
+Paper **Kernel PCA for novelty detection**: Una vez que estiró los datos en el espacio que transforme con la pca, midiendo distancias con el kernel busco lo que está lejos y eso es lo novedoso
+Ojo con la elección del sigma, cambia todo.
 
 **kernels_for_proteins**: Construir kernels para algo es muy difícil xd
 
