@@ -501,8 +501,59 @@ Muy usado porque:
   
 ### > Boosting
 
+- Es fácil construir un clasificador con un error apenas menor al 50% en cualquier problema de 2 clases balanceado (weaklearner)
+- Es difícil conseguir uno que dé un error arbitrariamente chico en cualquier problema (stronglearner)
+
+Idea central:
+- Construir una secuencia de clasifs débiles, donde c/u aprenda un poco de lo que le falta a la secuencia previa
+- Como los clasificadores débiles pueden mejorar un poco en cualquier problema (el error siempre es menor a 0.5, es decir, el azar), la secuencia converge a error cero.
+
+¿Cómo se construyen los modelos?
+Se trabaja con boostraps (como en bagging), pero la muestra no se toma con pesos estadísticos uniformes (bolillero), sino que se busca poner énfasis en aprender los puntos que fueron mal clasificados previamente por el ensamble ==> Para esto, se le aumenta el peso estadístico a los errores, y se le baja a los aciertos.
+
+¿Cómo se combinan las decisiones?
+- Se hace una suma de votos (como en Bagging)
+- Los pesos en la suma no son uniformes => se le da más peso a los clasificadores que son mejores.
 
 
+¿Qué pasa con el error de entrenamiento?
+Se puede probar que el error sobre los datos de ajuste converge a 0, siempre y cuando el weaklearn de verdad puede siempre hacer algo mejor que el azar (esto no siempre pasa para todas las distribuciones) =>
+- Se espera sobreajuste (el error de train tiende a cero)
+- El clasificador se vuelve más complejo a cada paso
+
+PERO NO!
+
+Analizando el error de test real, se vio que:
+- En realidad no sobreajusta
+- Peor, el error de test sigue bajando con el error de train en 0, explicaciones de esto:
+
+#### Margen
+- El error de test solo mide la clase (decisión binaria), mientras que la respuesta del algoritmo es más compleja (suma pesada de votos por una clase y otra, para que pase de una clase a otra cuesta mucho más que pase de tener signo positivo a negativo por ej)
+- Hay que tener en cuenta la "fuerza" de la rta (la calidad)
+- Margen: fracción pesada de votos correctos - fracción incorrecta. Margen= -+1 punto mal/bien clasificado con alta confianza. 0 si hay poca confianza
+
+T1: Mayor margen es equivalente a una menor cota superior en el error de test
+T2: Boosting incrementa en cada iteración el margen de los datos
+
+Conclusión: El error de test baja porque boosting aumenta el margen
+
+#### Costo exponencial (explicación estadística)
+El algoritmo minimiza a cada paso una función de costo exponencial => el costo exponencial es una cota superior del error de clasificación
+
+![[minimizacion-boosting.png]]
+(minimiza la roja en vez de la azul, por eso puede seguir minimizando)
+
+#### Teoría de juegos
+Boosting es un juego entre el booster y el weaklearn. La estrategia óptima da el algoritmo aplicado.
+
+#### Extensiones
+> Originalmente boosting solo era para clasificación binaria, pero fue extendido para regresión, clasif multiclase y ranking.
+
+Ventajas boosting:
+- eficiente y fácil de programar
+- solo hay que ajustar el parámetro T
+- flexible, funciona con casi cualquier learner (pero no tiene mucho sentido usarlo con strongs como redes)
+- efectivo, tiene garantías de funcionamiento (siempre que el weaklearn cumpla, en la realidad si no consiguen mejorar el 0.5, hacen trampa y vuelven a arrancar el algoritmo)
 
 ## Métodos de Kernel
 
