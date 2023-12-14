@@ -35,6 +35,11 @@ Tipo de variable, Uso de la variable
 -Sobresamplear la minoritaria
 -Subsamplear la mayoritaria (descartando casos obvios)
 
+**Paper: undersampling**:
+Genero puntos pero antes me aseguro que la zona sea segura (eliminando los que no tenga vecinos de su clase)
+Si la clase es desbalanceada es mejor no hacer nada artificialmente
+Hay que ser escépticos al leer papers de ML, 1/100 está mal
+
 ## Visualización
 
 ### Buenos gráficos - El lie factor
@@ -83,7 +88,7 @@ La solución de cuál es la dirección (vector unitario) que maximiza las proyec
 
 Desventaja: dimensiones altas hace que el cálculo se vuelva complejo (p³).
 
-¿Cuántas dimensiones necesito conservar? La cantidad puede estar determinada por la suma relativa de los lambdas, ya que quizás con sumar solo 2 ya tengo algo muy parecido a los z (ya que los otros pueden ser muy pequeños y no aportar significativamente) => Varianza explicada: dejar las direcciones que conservan "casi toda" la varianza.
+¿Cuántas dimensiones necesito conservar? La cantidad puede estar determinada por la suma relativa de los autovalores, ya que quizás con sumar solo 2 ya tengo algo muy parecido a los z (ya que los otros pueden ser muy pequeños y no aportar significativamente) => Varianza explicada: dejar las direcciones que conservan "casi toda" la varianza.
 
 Formas de hacer la PCA:
 - En correlación
@@ -636,15 +641,10 @@ El método de support vector machine nos plantea que dadas múltiples soluciones
   - Tax & Duin: encontrar la minima hiper esfera que contiene todos los datos, puntos afuera son outliers. Minimizo el radio de la esfera, permitiendo que algunos puntos queden afuera (relajando, como se hizo antes)
   - Scholkopf: encontrar el hiperplano con la maxima distancia al origen que deja todos los puntos de un lado (solo para kernel Gaussiano)
 -------------------------------
-Paper **Kernel PCA for novelty detection**: Una vez que estiró los datos en el espacio que transforme con la pca, midiendo distancias con el kernel busco lo que está lejos y eso es lo novedoso
+Paper **Kernel PCA for novelty detection**: Una vez que estiró los datos en el espacio infinito-dimensional, es este espacio la pca extrae los principales componentes de la distribución de datos; midiendo distancias con el kernel busco lo que está lejos y eso es lo novedoso.
 Ojo con la elección del sigma, cambia todo.
 
 **kernels_for_proteins**: Construir kernels para algo es muy difícil xd
-
-**undersampling**:
-Genero puntos pero antes me aseguro que la zona sea segura (eliminando los que no tenga vecinos de su clase)
-Si la clase es desbalanceada es mejor no hacer nada artificialmente
-Hay que ser escépticos al leer papers de ML, 1/100 está mal
 
 **String kernels**: Lo que funciona parte de ideas simples (redes profundas)
 Método de clasificación que proyecta al azar en un espacio muy grande y ahí puedo encontrar una solución muy fácil, pero funciona en unos casos y otro no. (Todo lo que tenga azar involucrado en gral no sirve)
