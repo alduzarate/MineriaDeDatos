@@ -114,7 +114,7 @@ Paper **Isomap**: Pca no va más allá, busca la mejor manera de retirar la supe
 
 --------
 
-Paper **Kernel PCA for novelty detection**: Una vez que estiró los datos en el espacio que transforme con la pca, midiendo distancias con el kernel busco lo que está lejos y eso es lo novedoso
+Paper **Kernel PCA for novelty detection**: Una vez que estiró los datos en el espacio de infinita dimensión, la pca extrae las componentes principales de la distribución de datos; midiendo distancias con el kernel busco lo que está lejos y eso es lo novedoso
 Ojo con la elección del sigma, cambia todo.
 
 ## Selección de variables
