@@ -596,7 +596,8 @@ Ejemplos de kernels:
   - p se optimiza siempre:
     - se optimiza con un conjunto de validación: separa parte de él y con esa parte se busca la optimización
     - se suele probar con los grados [1..5]
-- Gaussiano
+    - incrementar el grado incrementa la capacity
+- Gaussiano (incrementar $\sigma$ decrementa la capacity)
 - ¡not a kernel: tanh()!
 
 Obs:
